@@ -1,0 +1,6 @@
+{
+  "name": "WMS Logística SENAI — Gestão de Armazém",
+  "description": "Sistema de Gestão de Armazém (WMS) com mapa interativo de 150 posições, entrada (putaway), saída (picking), consulta de produtos e dashboard operacional.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

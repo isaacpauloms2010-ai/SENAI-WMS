@@ -1,0 +1,2955 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WMS Logística SENAI — Gestão de Armazém</title>
+  <meta name="description" content="Sistema de Gestão de Armazém (WMS) com mapa interativo de 150 posições, entrada (putaway), saída (picking), consulta de produtos e dashboard operacional." />
+  <meta property="og:title" content="WMS Logística SENAI — Gestão de Armazém" />
+  <meta property="og:description" content="Sistema de Gestão de Armazém (WMS) com mapa interativo de 150 posições, entrada (putaway), saída (picking), consulta de produtos e dashboard operacional." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <style>
+    :root {
+      --navy-950: #0b1324;
+      --navy-900: #0f172a;
+      --navy-800: #1e293b;
+      --navy-700: #334155;
+      --blue-600: #1d4ed8;
+      --blue-700: #1e40af;
+      --blue-50: #eff6ff;
+      --blue-100: #dbeafe;
+      --bg-canvas: #f1f5f9;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f8fafc;
+      --border-hairline: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --green-600: #16a34a;
+      --green-700: #15803d;
+      --green-100: #dcfce7;
+      --green-border: #86efac;
+      --red-600: #dc2626;
+      --red-700: #b91c1c;
+      --red-100: #fee2e2;
+      --red-border: #fca5a5;
+      --gray-600: #475569;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --amber-700: #b45309;
+      --amber-100: #fef3c7;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --sidebar-width: 264px;
+      --topbar-height: 64px;
+      --font-sans: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, "Cascadia Mono", "Consolas", "Liberation Mono", Menlo, monospace;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select {
+      font-family: inherit;
+      font-size: inherit;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--blue-600);
+      outline-offset: 2px;
+    }
+
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* App Shell */
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--navy-900);
+      color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      border-right: 1px solid var(--navy-800);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      z-index: 40;
+      transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .sidebar-brand {
+      height: var(--topbar-height);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-md);
+      background-color: var(--blue-600);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-nav {
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .nav-section-label {
+      padding: 6px 12px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      letter-spacing: 0.04em;
+    }
+
+    .nav-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      min-height: 42px;
+      border: 0;
+      border-radius: var(--radius-md);
+      background: transparent;
+      color: #cbd5e1;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 150ms ease, color 150ms ease;
+    }
+
+    .nav-btn:hover {
+      background-color: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+    }
+
+    .nav-btn.active {
+      background-color: var(--blue-600);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .nav-btn svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sidebar-meta {
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    .btn-restore {
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 14px;
+      min-height: 40px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background-color: rgba(255, 255, 255, 0.04);
+      color: #e2e8f0;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 150ms ease, border-color 150ms ease;
+    }
+
+    .btn-restore:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.28);
+      color: #ffffff;
+    }
+
+    /* Main Column */
+    .main-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Bar */
+    .topbar {
+      height: var(--topbar-height);
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-hairline);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      width: 40px;
+      height: 40px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      background-color: var(--bg-surface);
+      color: var(--text-primary);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .page-heading {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .topbar-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 18px;
+      min-height: 40px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .btn-primary {
+      background-color: var(--navy-900);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--navy-800);
+    }
+
+    .btn-accent {
+      background-color: var(--blue-600);
+      color: #ffffff;
+    }
+
+    .btn-accent:hover {
+      background-color: var(--blue-700);
+    }
+
+    .btn-danger {
+      background-color: var(--red-600);
+      color: #ffffff;
+    }
+
+    .btn-danger:hover {
+      background-color: var(--red-700);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-surface);
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--bg-subtle);
+    }
+
+    .btn-sm {
+      min-height: 34px;
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Viewport Content */
+    .content-viewport {
+      padding: 24px;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    .view-section {
+      display: none;
+    }
+
+    .view-section.active {
+      display: block;
+    }
+
+    .section-intro {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      margin: 0 0 4px 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.015em;
+    }
+
+    .section-desc {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* Panels / Surfaces (Single-elevation, crisp 1px borders) */
+    .panel {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+
+    .panel-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-hairline);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .panel-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .kpi-card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kpi-value.is-green { color: var(--green-700); }
+    .kpi-value.is-red { color: var(--red-600); }
+    .kpi-value.is-gray { color: var(--gray-600); }
+    .kpi-value.is-blue { color: var(--blue-600); }
+
+    .kpi-foot {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Dashboard Charts Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 380px minmax(0, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .donut-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .donut-legend {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+    }
+
+    .legend-key {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .swatch-red { background-color: var(--red-600); }
+    .swatch-green { background-color: var(--green-600); }
+    .swatch-gray { background-color: #94a3b8; }
+
+    .bar-chart-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    /* Tables */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background-color: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-hairline);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-hairline);
+      color: var(--text-primary);
+      vertical-align: middle;
+    }
+
+    tbody tr:hover {
+      background-color: var(--bg-subtle);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+
+    /* Status inline indicators (text + subtle semantic tint, no pill badges) */
+    .status-text {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-text.entrada { color: var(--green-700); }
+    .status-text.saida { color: var(--red-700); }
+
+    /* Warehouse Map */
+    .map-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+      padding: 14px 18px;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+    }
+
+    .map-filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .segmented {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 4px;
+      background-color: var(--bg-canvas);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+    }
+
+    .seg-btn {
+      border: 0;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      min-height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 150ms ease, color 150ms ease;
+    }
+
+    .seg-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .seg-btn.active {
+      background-color: var(--navy-900);
+      color: #ffffff;
+    }
+
+    .map-legend {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .legend-box {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid transparent;
+    }
+
+    .legend-box.livre {
+      background-color: var(--green-100);
+      border-color: var(--green-600);
+    }
+
+    .legend-box.ocupada {
+      background-color: var(--red-100);
+      border-color: var(--red-600);
+    }
+
+    .legend-box.indisponivel {
+      background-color: var(--gray-200);
+      border-color: #94a3b8;
+    }
+
+    .map-workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .streets-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .street-block {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+    }
+
+    .street-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-hairline);
+    }
+
+    .street-name {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy-900);
+    }
+
+    .street-stats {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rack-matrix {
+      display: grid;
+      grid-template-columns: 56px repeat(5, minmax(0, 1fr));
+      gap: 6px;
+      align-items: center;
+    }
+
+    .rack-col-head {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      padding-bottom: 4px;
+      font-family: var(--font-mono);
+    }
+
+    .rack-row-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      white-space: nowrap;
+    }
+
+    .slot-btn {
+      height: 36px;
+      border-radius: 5px;
+      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+      padding: 0 4px;
+      position: relative;
+    }
+
+    .slot-btn:hover {
+      transform: translateY(-1px);
+      z-index: 2;
+    }
+
+    .slot-btn.livre {
+      background-color: var(--green-100);
+      border-color: var(--green-border);
+      color: var(--green-700);
+    }
+
+    .slot-btn.livre:hover {
+      background-color: #bbf7d0;
+      border-color: var(--green-600);
+    }
+
+    .slot-btn.ocupada {
+      background-color: var(--red-100);
+      border-color: var(--red-border);
+      color: var(--red-700);
+    }
+
+    .slot-btn.ocupada:hover {
+      background-color: #fecaca;
+      border-color: var(--red-600);
+    }
+
+    .slot-btn.indisponivel {
+      background-color: var(--gray-200);
+      border-color: var(--gray-300);
+      color: var(--gray-600);
+    }
+
+    .slot-btn.indisponivel:hover {
+      background-color: #cbd5e1;
+      border-color: #64748b;
+    }
+
+    .slot-btn.selected {
+      box-shadow: 0 0 0 2px var(--navy-900);
+      border-color: var(--navy-900);
+      z-index: 3;
+    }
+
+    .slot-btn.dimmed {
+      opacity: 0.25;
+    }
+
+    /* Map Inspector Panel */
+    .inspector-panel {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      position: sticky;
+      top: calc(var(--topbar-height) + 16px);
+    }
+
+    .inspector-address {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy-900);
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 14px;
+    }
+
+    .detail-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-hairline);
+      font-size: 13px;
+    }
+
+    .detail-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .detail-key {
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .detail-val {
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .status-banner {
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      border: 1px solid transparent;
+    }
+
+    .status-banner.livre {
+      background-color: var(--green-100);
+      border-color: var(--green-border);
+      color: var(--green-700);
+    }
+
+    .status-banner.ocupada {
+      background-color: var(--red-100);
+      border-color: var(--red-border);
+      color: var(--red-700);
+    }
+
+    .status-banner.indisponivel {
+      background-color: var(--gray-200);
+      border-color: var(--gray-300);
+      color: var(--gray-600);
+    }
+
+    /* Forms (Putaway & Picking) */
+    .split-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .input, .select {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      background-color: var(--bg-surface);
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: border-color 150ms ease;
+    }
+
+    .input:focus, .select:focus {
+      outline: none;
+      border-color: var(--blue-600);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.14);
+    }
+
+    .field-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .form-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      padding-top: 6px;
+    }
+
+    /* Alerts */
+    .alert {
+      display: none;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      border: 1px solid transparent;
+    }
+
+    .alert.visible {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .alert.success {
+      background-color: var(--green-100);
+      border-color: var(--green-border);
+      color: var(--green-700);
+    }
+
+    .alert.error {
+      background-color: var(--red-100);
+      border-color: var(--red-border);
+      color: var(--red-700);
+    }
+
+    /* Search input with icon */
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 12px;
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-box .input {
+      padding-left: 38px;
+    }
+
+    .toolbar-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state {
+      padding: 36px 20px;
+      text-align: center;
+      color: var(--text-secondary);
+      background-color: var(--bg-subtle);
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius-md);
+    }
+
+    .empty-state-title {
+      margin: 0 0 4px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .empty-state-desc {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .selected-pick-row {
+      background-color: var(--blue-50) !important;
+    }
+
+    /* Modal Dialog */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(15, 23, 42, 0.56);
+      z-index: 60;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-dialog {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      max-width: 440px;
+      width: 100%;
+      padding: 24px;
+    }
+
+    .modal-title {
+      margin: 0 0 8px 0;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      margin: 0 0 20px 0;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(15, 23, 42, 0.5);
+      z-index: 35;
+    }
+
+    .sidebar-overlay.open {
+      display: block;
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 1200px) {
+      .kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+      .map-workspace {
+        grid-template-columns: 1fr;
+      }
+      .inspector-panel {
+        position: static;
+      }
+      .split-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 960px) {
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        transform: translateX(-100%);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .mobile-menu-btn {
+        display: inline-flex;
+      }
+      .streets-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        padding: 0 16px;
+      }
+      .topbar-meta {
+        display: none;
+      }
+      .content-viewport {
+        padding: 16px;
+      }
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .rack-matrix {
+        grid-template-columns: 48px repeat(5, minmax(0, 1fr));
+        gap: 4px;
+      }
+      .slot-btn {
+        height: 40px;
+        font-size: 10px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebarOverlay" class="sidebar-overlay" aria-hidden="true"></div>
+
+    <!-- Menu Lateral -->
+    <aside id="sidebar" class="sidebar" aria-label="Menu principal do WMS">
+      <div class="sidebar-brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z"></path>
+            <path d="M9 21V12h6v9"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">WMS Centro Logístico</span>
+          <span class="brand-subtitle">SENAI · Programação da Produção</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Módulos operacionais">
+        <div class="nav-section-label">Operações do Armazém</div>
+
+        <button type="button" class="nav-btn active" data-view="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="9" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="5" rx="1"></rect>
+            <rect x="14" y="12" width="7" height="9" rx="1"></rect>
+            <rect x="3" y="16" width="7" height="5" rx="1"></rect>
+          </svg>
+          <span>Dashboard</span>
+        </button>
+
+        <button type="button" class="nav-btn" data-view="mapa">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+            <path d="M3 9h18M3 15h18M9 3v18M15 3v18"></path>
+          </svg>
+          <span>Mapa do Armazém</span>
+        </button>
+
+        <button type="button" class="nav-btn" data-view="entrada">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Entrada de Mercadorias</span>
+        </button>
+
+        <button type="button" class="nav-btn" data-view="saida">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span>Saída de Mercadorias</span>
+        </button>
+
+        <button type="button" class="nav-btn" data-view="consulta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span>Consulta de Produtos</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-meta">
+          Estrutura: 6 ruas · 30 módulos · 150 posições<br />
+          Armazenamento local ativo
+        </div>
+        <button type="button" id="btnOpenResetModal" class="btn-restore">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          <span>Restaurar Demonstração</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Coluna Principal -->
+    <div class="main-col">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button type="button" id="btnMobileMenu" class="mobile-menu-btn" aria-label="Abrir menu lateral" aria-expanded="false">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <h1 id="topbarTitle" class="page-heading">Dashboard Operacional</h1>
+          <span class="topbar-meta" aria-hidden="true">·</span>
+          <span id="topbarSummary" class="topbar-meta tabular">150 posições totais</span>
+        </div>
+
+        <div class="topbar-actions">
+          <button type="button" id="btnQuickPutaway" class="btn btn-accent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Nova Entrada</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="content-viewport">
+        <!-- VIEW 1: DASHBOARD -->
+        <section id="view-dashboard" class="view-section active" aria-labelledby="dashHeading">
+          <div class="section-intro">
+            <div>
+              <h2 id="dashHeading" class="section-title">Visão Geral do Armazém</h2>
+              <p class="section-desc">Indicadores de capacidade, ocupação por rua e movimentações recentes em tempo real.</p>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Capacidade Total</span>
+              <span id="kpiTotal" class="kpi-value tabular">150</span>
+              <span class="kpi-foot">6 ruas × 5 módulos × 5 níveis</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Posições Ocupadas</span>
+              <span id="kpiOcupadas" class="kpi-value is-red tabular">0</span>
+              <span id="kpiTotalUnidades" class="kpi-foot tabular">0 unidades armazenadas</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Posições Livres</span>
+              <span id="kpiLivres" class="kpi-value is-green tabular">0</span>
+              <span class="kpi-foot">Disponíveis para putaway</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Indisponíveis</span>
+              <span id="kpiIndisponiveis" class="kpi-value is-gray tabular">0</span>
+              <span class="kpi-foot">Bloqueios de manutenção</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Taxa de Ocupação</span>
+              <span id="kpiTaxa" class="kpi-value is-blue tabular">0,0%</span>
+              <span class="kpi-foot">Ocupadas sobre 150 posições</span>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Distribuição da Capacidade</h3>
+                <span class="panel-subtitle tabular">Base: 150 posições</span>
+              </div>
+              <div class="donut-wrap">
+                <svg id="donutChartSvg" width="210" height="210" viewBox="0 0 210 210" role="img" aria-label="Gráfico de distribuição da capacidade do armazém"></svg>
+                <div id="donutLegend" class="donut-legend"></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Ocupação por Rua (A até F)</h3>
+                <span class="panel-subtitle tabular">25 posições por rua (5 módulos × 5 níveis)</span>
+              </div>
+              <div class="bar-chart-wrap">
+                <svg id="streetChartSvg" width="100%" height="295" viewBox="0 0 640 295" role="img" aria-label="Gráfico de barras de ocupação por rua"></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3 class="panel-title">Últimas Movimentações</h3>
+              <span id="movCountLabel" class="panel-subtitle tabular">0 registros</span>
+            </div>
+            <div id="recentMovementsContainer" class="table-wrap"></div>
+          </div>
+        </section>
+
+        <!-- VIEW 2: MAPA DO ARMAZÉM -->
+        <section id="view-mapa" class="view-section" aria-labelledby="mapHeading">
+          <div class="section-intro">
+            <div>
+              <h2 id="mapHeading" class="section-title">Mapa Visual Interativo (150 Posições)</h2>
+              <p class="section-desc">Visualize todas as 6 ruas, 5 módulos e 5 níveis. Selecione qualquer posição para inspecionar detalhes ou operar.</p>
+            </div>
+          </div>
+
+          <div class="map-toolbar">
+            <div class="map-filters">
+              <div class="segmented" role="group" aria-label="Filtrar mapa por status">
+                <button type="button" class="seg-btn active" data-map-filter="todos">Todas (150)</button>
+                <button type="button" class="seg-btn" data-map-filter="livre">Livres</button>
+                <button type="button" class="seg-btn" data-map-filter="ocupada">Ocupadas</button>
+                <button type="button" class="seg-btn" data-map-filter="indisponivel">Indisponíveis</button>
+              </div>
+            </div>
+
+            <div class="map-legend" aria-label="Legenda de cores do mapa">
+              <span class="legend-item"><span class="legend-box livre" aria-hidden="true"></span> Livre (L)</span>
+              <span class="legend-item"><span class="legend-box ocupada" aria-hidden="true"></span> Ocupada (O)</span>
+              <span class="legend-item"><span class="legend-box indisponivel" aria-hidden="true"></span> Indisponível (X)</span>
+            </div>
+          </div>
+
+          <div class="map-workspace">
+            <div id="warehouseMapGrid" class="streets-grid"></div>
+
+            <aside id="mapInspector" class="inspector-panel" aria-live="polite">
+              <div class="panel-header">
+                <h3 class="panel-title">Detalhes da Posição</h3>
+              </div>
+              <div id="inspectorContent">
+                <p class="section-desc">Clique em qualquer célula do mapa ao lado para visualizar o endereço exato, status operacional e dados do produto armazenado.</p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- VIEW 3: ENTRADA DE MERCADORIAS (PUTAWAY) -->
+        <section id="view-entrada" class="view-section" aria-labelledby="putawayHeading">
+          <div class="section-intro">
+            <div>
+              <h2 id="putawayHeading" class="section-title">Entrada de Mercadorias (Putaway)</h2>
+              <p class="section-desc">Receba produtos e enderece exclusivamente em posições livres do armazém.</p>
+            </div>
+          </div>
+
+          <div class="split-layout">
+            <div class="panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Registrar Endereçamento</h3>
+                <span id="freeSlotsCounter" class="panel-subtitle tabular">0 posições livres</span>
+              </div>
+
+              <div id="putawayAlert" class="alert" role="alert"></div>
+
+              <form id="putawayForm" class="form-grid" novalidate>
+                <div class="form-field">
+                  <label for="inputSku">Código SKU *</label>
+                  <input type="text" id="inputSku" class="input mono" placeholder="Ex.: SKU-1045" maxlength="32" required />
+                  <span class="field-hint">Identificador único do item (sem espaços vazios).</span>
+                </div>
+
+                <div class="form-field">
+                  <label for="inputQty">Quantidade Recebida *</label>
+                  <input type="number" id="inputQty" class="input tabular" min="1" step="1" placeholder="Ex.: 24" required />
+                  <span class="field-hint">Somente números inteiros positivos.</span>
+                </div>
+
+                <div class="form-field full">
+                  <label for="inputNome">Nome do Produto *</label>
+                  <input type="text" id="inputNome" class="input" placeholder="Ex.: Rolamento Esférico Industrial 6205-2RS" maxlength="80" required />
+                </div>
+
+                <div class="form-field">
+                  <label for="selectPutawayRua">Filtrar Endereço por Rua</label>
+                  <select id="selectPutawayRua" class="select">
+                    <option value="TODAS">Todas as ruas (A – F)</option>
+                    <option value="RUA-A">Rua A</option>
+                    <option value="RUA-B">Rua B</option>
+                    <option value="RUA-C">Rua C</option>
+                    <option value="RUA-D">Rua D</option>
+                    <option value="RUA-E">Rua E</option>
+                    <option value="RUA-F">Rua F</option>
+                  </select>
+                </div>
+
+                <div class="form-field">
+                  <label for="selectPutawayAddress">Endereço de Armazenamento *</label>
+                  <select id="selectPutawayAddress" class="select mono" required></select>
+                  <span class="field-hint">Apenas posições livres são listadas.</span>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" id="btnSubmitPutaway" class="btn btn-accent">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Confirmar Entrada</span>
+                  </button>
+                  <button type="button" id="btnResetPutawayForm" class="btn btn-secondary">Limpar Campos</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Pré-visualização do Endereço</h3>
+              </div>
+              <div id="putawayPreviewContent"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 4: SAÍDA DE MERCADORIAS (PICKING) -->
+        <section id="view-saida" class="view-section" aria-labelledby="pickingHeading">
+          <div class="section-intro">
+            <div>
+              <h2 id="pickingHeading" class="section-title">Saída de Mercadorias (Picking)</h2>
+              <p class="section-desc">Pesquise o produto armazenado, confira a localização e registre a quantidade retirada.</p>
+            </div>
+          </div>
+
+          <div id="pickingAlert" class="alert" role="alert"></div>
+
+          <div class="split-layout">
+            <div class="panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Localizar Estoque para Retirada</h3>
+                <span id="pickingListCount" class="panel-subtitle tabular">0 posições ocupadas</span>
+              </div>
+
+              <div class="toolbar-row">
+                <div class="search-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input type="search" id="pickingSearchInput" class="input" placeholder="Pesquisar por SKU ou nome do produto..." autocomplete="off" />
+                </div>
+              </div>
+
+              <div id="pickingResultsContainer" class="table-wrap"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Confirmar Retirada</h3>
+              </div>
+              <div id="pickingFormContainer"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 5: CONSULTA DE PRODUTOS -->
+        <section id="view-consulta" class="view-section" aria-labelledby="lookupHeading">
+          <div class="section-intro">
+            <div>
+              <h2 id="lookupHeading" class="section-title">Consulta de Produtos</h2>
+              <p class="section-desc">Busca instantânea por nome ou SKU com endereço completo de armazenagem.</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="toolbar-row">
+              <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="search" id="lookupSearchInput" class="input" placeholder="Digite o nome do produto ou código SKU para filtrar..." autocomplete="off" />
+              </div>
+
+              <select id="lookupRuaFilter" class="select" style="width: auto; min-width: 170px;" aria-label="Filtrar consulta por rua">
+                <option value="TODAS">Todas as ruas</option>
+                <option value="RUA-A">Rua A</option>
+                <option value="RUA-B">Rua B</option>
+                <option value="RUA-C">Rua C</option>
+                <option value="RUA-D">Rua D</option>
+                <option value="RUA-E">Rua E</option>
+                <option value="RUA-F">Rua F</option>
+              </select>
+
+              <span id="lookupCounter" class="panel-subtitle tabular">0 produtos encontrados</span>
+            </div>
+
+            <div id="lookupResultsContainer" class="table-wrap"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação para Restaurar Dados de Demonstração -->
+  <div id="resetModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="resetModalTitle">
+    <div class="modal-dialog">
+      <h3 id="resetModalTitle" class="modal-title">Restaurar dados de demonstração?</h3>
+      <p class="modal-body">
+        Esta ação substituirá todas as movimentações e saldos atuais do armazém pelo conjunto inicial de demonstração (150 posições, incluindo 8 bloqueios fixos de manutenção).
+      </p>
+      <div class="modal-actions">
+        <button type="button" id="btnCancelReset" class="btn btn-secondary">Cancelar</button>
+        <button type="button" id="btnConfirmReset" class="btn btn-danger">Restaurar Dados</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* =========================================================
+         1. CONSTANTES E CONFIGURAÇÃO EXATA DO ARMAZÉM (150 POSIÇÕES)
+         ========================================================= */
+      const STORAGE_KEY = "wms_senai_state_v1";
+
+      const STREETS = [
+        { code: "RUA-A", label: "Rua A" },
+        { code: "RUA-B", label: "Rua B" },
+        { code: "RUA-C", label: "Rua C" },
+        { code: "RUA-D", label: "Rua D" },
+        { code: "RUA-E", label: "Rua E" },
+        { code: "RUA-F", label: "Rua F" }
+      ];
+
+      const MODULES = ["MOD-01", "MOD-02", "MOD-03", "MOD-04", "MOD-05"];
+      const LEVELS = ["NIVEL-1", "NIVEL-2", "NIVEL-3", "NIVEL-4", "NIVEL-5"];
+      const LEVELS_DISPLAY_ORDER = ["NIVEL-5", "NIVEL-4", "NIVEL-3", "NIVEL-2", "NIVEL-1"];
+      const TOTAL_CAPACITY = 150; // 6 ruas * 5 módulos * 5 níveis = 150
+
+      // Posições fixas e demonstráveis marcadas como indisponíveis (bloqueios operacionais/manutenção)
+      const UNAVAILABLE_POSITIONS = {
+        "RUA-A / MOD-03 / NIVEL-5": "Manutenção estrutural da longarina superior",
+        "RUA-B / MOD-01 / NIVEL-1": "Área de acesso ao hidrante e extintor",
+        "RUA-B / MOD-04 / NIVEL-5": "Revisão elétrica de luminária LED",
+        "RUA-C / MOD-02 / NIVEL-3": "Bloqueio de manutenção preventiva do porta-palete",
+        "RUA-D / MOD-05 / NIVEL-1": "Corredor de segurança e passagem de empilhadeira",
+        "RUA-E / MOD-02 / NIVEL-5": "Inspeção de rede de sprinklers",
+        "RUA-E / MOD-03 / NIVEL-4": "Nivelamento de travessa metálica",
+        "RUA-F / MOD-04 / NIVEL-2": "Bloqueio de manutenção corretiva"
+      };
+
+      // Conjunto inicial de produtos fictícios de logística/produção para demonstração
+      const DEMO_PRODUCTS = [
+        { address: "RUA-A / MOD-01 / NIVEL-1", sku: "SKU-1001", nome: "Rolamento Axial SKF 6205-2RS", quantidade: 120 },
+        { address: "RUA-A / MOD-01 / NIVEL-2", sku: "SKU-1002", nome: "Motor Elétrico Trifásico WEG 5CV", quantidade: 8 },
+        { address: "RUA-A / MOD-02 / NIVEL-1", sku: "SKU-1003", nome: "Válvula Solenoide Pneumática 5/2 Vias", quantidade: 45 },
+        { address: "RUA-A / MOD-02 / NIVEL-3", sku: "SKU-1004", nome: "Correia Dentada Industrial HTD 8M", quantidade: 64 },
+        { address: "RUA-A / MOD-03 / NIVEL-1", sku: "SKU-1005", nome: "Sensor Indutivo M12 PNP NA", quantidade: 90 },
+        { address: "RUA-A / MOD-04 / NIVEL-2", sku: "SKU-1006", nome: "Caixa Plástica Organizadora 40L Azul", quantidade: 50 },
+        { address: "RUA-A / MOD-05 / NIVEL-1", sku: "SKU-1007", nome: "Filme Stretch Industrial 500mm x 25µm", quantidade: 36 },
+
+        { address: "RUA-B / MOD-01 / NIVEL-2", sku: "SKU-1008", nome: "Bomba Hidráulica de Engrenagem 16cc", quantidade: 14 },
+        { address: "RUA-B / MOD-02 / NIVEL-1", sku: "SKU-1009", nome: "Inversor de Frequência 3kW 380V", quantidade: 11 },
+        { address: "RUA-B / MOD-02 / NIVEL-4", sku: "SKU-1010", nome: "Cabo Flexível 6mm² Preto Rolo 100m", quantidade: 22 },
+        { address: "RUA-B / MOD-03 / NIVEL-2", sku: "SKU-1011", nome: "Filtro de Óleo Hidráulico Alta Pressão", quantidade: 38 },
+        { address: "RUA-B / MOD-04 / NIVEL-1", sku: "SKU-1012", nome: "Parafuso Sextavado M10x40 Aço 8.8 (Cx 100)", quantidade: 75 },
+        { address: "RUA-B / MOD-05 / NIVEL-3", sku: "SKU-1013", nome: "Manômetro Glicerina 0-16 Bar 1/4 NPT", quantidade: 29 },
+
+        { address: "RUA-C / MOD-01 / NIVEL-1", sku: "SKU-1014", nome: "Fita Adesiva Industrial 48mm x 100m (Pct 6)", quantidade: 84 },
+        { address: "RUA-C / MOD-01 / NIVEL-3", sku: "SKU-1015", nome: "Caixa Papelão Onda Dupla 40x30x30cm", quantidade: 200 },
+        { address: "RUA-C / MOD-03 / NIVEL-1", sku: "SKU-1016", nome: "Cilindro Pneumático ISO 15552 Ø50x150", quantidade: 16 },
+        { address: "RUA-C / MOD-04 / NIVEL-2", sku: "SKU-1017", nome: "Disjuntor Tripolar DIN 32A Curva C", quantidade: 42 },
+        { address: "RUA-C / MOD-04 / NIVEL-4", sku: "SKU-1018", nome: "Contator de Potência 25A Bobina 24VDC", quantidade: 30 },
+        { address: "RUA-C / MOD-05 / NIVEL-1", sku: "SKU-1019", nome: "Pallet Contenção Polietileno 2 Tambores", quantidade: 6 },
+
+        { address: "RUA-D / MOD-01 / NIVEL-1", sku: "SKU-1020", nome: "Luva de Segurança Nitrílica Tam. G (Cx 50)", quantidade: 60 },
+        { address: "RUA-D / MOD-01 / NIVEL-2", sku: "SKU-1021", nome: "Óculos de Proteção Incolor Antirrisco", quantidade: 110 },
+        { address: "RUA-D / MOD-02 / NIVEL-1", sku: "SKU-1022", nome: "Óleo Lubrificante ISO VG 68 Balde 20L", quantidade: 18 },
+        { address: "RUA-D / MOD-03 / NIVEL-2", sku: "SKU-1023", nome: "Graxa Industrial Complexo de Lítio 1kg", quantidade: 44 },
+        { address: "RUA-D / MOD-04 / NIVEL-3", sku: "SKU-1024", nome: "Mangueira Hidráulica Trama Dupla 1/2 pol", quantidade: 35 },
+
+        { address: "RUA-E / MOD-01 / NIVEL-1", sku: "SKU-1025", nome: "Redutor de Velocidade Coroa e Rosca 1:30", quantidade: 9 },
+        { address: "RUA-E / MOD-02 / NIVEL-2", sku: "SKU-1026", nome: "Eixo Linear Temperado Ø20mm x 1000mm", quantidade: 25 },
+        { address: "RUA-E / MOD-04 / NIVEL-1", sku: "SKU-1027", nome: "Acoplamento Elástico de Garras GR-28", quantidade: 31 },
+        { address: "RUA-E / MOD-05 / NIVEL-2", sku: "SKU-1028", nome: "Chapa de Aço Carbono SAE 1020 3mm", quantidade: 19 },
+        { address: "RUA-E / MOD-05 / NIVEL-3", sku: "SKU-1029", nome: "Perfil Estrutural Alumínio 40x40mm (3m)", quantidade: 40 },
+
+        { address: "RUA-F / MOD-01 / NIVEL-1", sku: "SKU-1030", nome: "Etiqueta Térmica Adesiva 100x50mm (Rolo)", quantidade: 95 },
+        { address: "RUA-F / MOD-02 / NIVEL-1", sku: "SKU-1031", nome: "Ribbon Cera 110mm x 450m Impressora Térmica", quantidade: 52 },
+        { address: "RUA-F / MOD-02 / NIVEL-3", sku: "SKU-1032", nome: "Fita de Arquear PET Verde 16mm Rolo", quantidade: 15 },
+        { address: "RUA-F / MOD-03 / NIVEL-2", sku: "SKU-1033", nome: "Selo Metálico para Fita PET 16mm (Cx 1000)", quantidade: 28 },
+        { address: "RUA-F / MOD-05 / NIVEL-1", sku: "SKU-1034", nome: "Cantoneira de Papelão Rígido 50x50x1000mm", quantidade: 140 }
+      ];
+
+      /* =========================================================
+         2. ESTADO GLOBAL E PERSISTÊNCIA (LOCALSTORAGE)
+         ========================================================= */
+      let state = {
+        positions: [],
+        movements: []
+      };
+
+      let activeView = "dashboard";
+      let mapStatusFilter = "todos";
+      let selectedMapAddress = "RUA-A / MOD-01 / NIVEL-1";
+      let selectedPickingAddress = null;
+
+      function formatDateBR(isoString) {
+        try {
+          const d = new Date(isoString);
+          return d.toLocaleString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+          });
+        } catch {
+          return "-";
+        }
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function buildInitialState() {
+        const now = Date.now();
+        const positions = [];
+        const demoMap = new Map(DEMO_PRODUCTS.map(item => [item.address, item]));
+
+        STREETS.forEach((street) => {
+          MODULES.forEach((mod) => {
+            LEVELS.forEach((level) => {
+              const address = `${street.code} / ${mod} / ${level}`;
+              const unavailableReason = UNAVAILABLE_POSITIONS[address] || null;
+              const demoProduct = demoMap.get(address) || null;
+
+              if (unavailableReason) {
+                positions.push({
+                  address,
+                  ruaCode: street.code,
+                  ruaLabel: street.label,
+                  modulo: mod,
+                  nivel: level,
+                  status: "indisponivel",
+                  motivoIndisponibilidade: unavailableReason,
+                  produto: null
+                });
+              } else if (demoProduct) {
+                positions.push({
+                  address,
+                  ruaCode: street.code,
+                  ruaLabel: street.label,
+                  modulo: mod,
+                  nivel: level,
+                  status: "ocupada",
+                  motivoIndisponibilidade: null,
+                  produto: {
+                    sku: demoProduct.sku,
+                    nome: demoProduct.nome,
+                    quantidade: demoProduct.quantidade,
+                    updatedAt: new Date(now - 3600 * 1000).toISOString()
+                  }
+                });
+              } else {
+                positions.push({
+                  address,
+                  ruaCode: street.code,
+                  ruaLabel: street.label,
+                  modulo: mod,
+                  nivel: level,
+                  status: "livre",
+                  motivoIndisponibilidade: null,
+                  produto: null
+                });
+              }
+            });
+          });
+        });
+
+        const initialMovements = [
+          {
+            id: "mov-init-1",
+            tipo: "ENTRADA",
+            sku: "SKU-1001",
+            nome: "Rolamento Axial SKF 6205-2RS",
+            quantidade: 120,
+            address: "RUA-A / MOD-01 / NIVEL-1",
+            timestamp: new Date(now - 7200 * 1000).toISOString()
+          },
+          {
+            id: "mov-init-2",
+            tipo: "ENTRADA",
+            sku: "SKU-1015",
+            nome: "Caixa Papelão Onda Dupla 40x30x30cm",
+            quantidade: 200,
+            address: "RUA-C / MOD-01 / NIVEL-3",
+            timestamp: new Date(now - 5400 * 1000).toISOString()
+          },
+          {
+            id: "mov-init-3",
+            tipo: "ENTRADA",
+            sku: "SKU-1034",
+            nome: "Cantoneira de Papelão Rígido 50x50x1000mm",
+            quantidade: 140,
+            address: "RUA-F / MOD-05 / NIVEL-1",
+            timestamp: new Date(now - 3600 * 1000).toISOString()
+          }
+        ];
+
+        return { positions, movements: initialMovements };
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (err) {
+          console.error("Falha ao salvar no localStorage:", err);
+        }
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) {
+            state = buildInitialState();
+            saveState();
+            return;
+          }
+          const parsed = JSON.parse(raw);
+          if (
+            !parsed ||
+            !Array.isArray(parsed.positions) ||
+            parsed.positions.length !== TOTAL_CAPACITY
+          ) {
+            state = buildInitialState();
+            saveState();
+            return;
+          }
+          // Garante integridade das posições fixas indisponíveis
+          parsed.positions.forEach((pos) => {
+            if (UNAVAILABLE_POSITIONS[pos.address]) {
+              pos.status = "indisponivel";
+              pos.motivoIndisponibilidade = UNAVAILABLE_POSITIONS[pos.address];
+              pos.produto = null;
+            }
+          });
+          state = {
+            positions: parsed.positions,
+            movements: Array.isArray(parsed.movements) ? parsed.movements : []
+          };
+        } catch {
+          state = buildInitialState();
+          saveState();
+        }
+      }
+
+      function getPositionByAddress(address) {
+        return state.positions.find((p) => p.address === address) || null;
+      }
+
+      function computeMetrics() {
+        let ocupadas = 0;
+        let livres = 0;
+        let indisponiveis = 0;
+        let totalUnidades = 0;
+
+        for (const p of state.positions) {
+          if (p.status === "ocupada") {
+            ocupadas++;
+            totalUnidades += p.produto ? p.produto.quantidade : 0;
+          } else if (p.status === "indisponivel") {
+            indisponiveis++;
+          } else {
+            livres++;
+          }
+        }
+
+        const taxaOcupacao = (ocupadas / TOTAL_CAPACITY) * 100;
+        return {
+          total: TOTAL_CAPACITY,
+          ocupadas,
+          livres,
+          indisponiveis,
+          totalUnidades,
+          taxaOcupacao
+        };
+      }
+
+      function logMovement(tipo, sku, nome, quantidade, address) {
+        state.movements.unshift({
+          id: "mov-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
+          tipo,
+          sku,
+          nome,
+          quantidade,
+          address,
+          timestamp: new Date().toISOString()
+        });
+        if (state.movements.length > 50) {
+          state.movements = state.movements.slice(0, 50);
+        }
+      }
+
+      /* =========================================================
+         3. NAVEGAÇÃO E LAYOUT RESPONSIVO
+         ========================================================= */
+      const VIEW_TITLES = {
+        dashboard: "Dashboard Operacional",
+        mapa: "Mapa Visual do Armazém",
+        entrada: "Entrada de Mercadorias (Putaway)",
+        saida: "Saída de Mercadorias (Picking)",
+        consulta: "Consulta de Produtos"
+      };
+
+      function switchView(viewName) {
+        if (!VIEW_TITLES[viewName]) return;
+        activeView = viewName;
+
+        document.querySelectorAll(".view-section").forEach((el) => {
+          el.classList.toggle("active", el.id === "view-" + viewName);
+        });
+
+        document.querySelectorAll(".nav-btn[data-view]").forEach((btn) => {
+          btn.classList.toggle("active", btn.getAttribute("data-view") === viewName);
+        });
+
+        document.getElementById("topbarTitle").textContent = VIEW_TITLES[viewName];
+        closeMobileSidebar();
+
+        if (viewName === "dashboard") renderDashboard();
+        if (viewName === "mapa") renderMap();
+        if (viewName === "entrada") renderPutawayOptions();
+        if (viewName === "saida") renderPickingView();
+        if (viewName === "consulta") renderLookupView();
+      }
+
+      function openMobileSidebar() {
+        document.getElementById("sidebar").classList.add("open");
+        document.getElementById("sidebarOverlay").classList.add("open");
+        document.getElementById("btnMobileMenu").setAttribute("aria-expanded", "true");
+      }
+
+      function closeMobileSidebar() {
+        document.getElementById("sidebar").classList.remove("open");
+        document.getElementById("sidebarOverlay").classList.remove("open");
+        document.getElementById("btnMobileMenu").setAttribute("aria-expanded", "false");
+      }
+
+      /* =========================================================
+         4. RENDERIZAÇÃO DO DASHBOARD E GRÁFICOS SVG PUROS
+         ========================================================= */
+      function renderDashboard() {
+        const m = computeMetrics();
+
+        document.getElementById("kpiTotal").textContent = String(m.total);
+        document.getElementById("kpiOcupadas").textContent = String(m.ocupadas);
+        document.getElementById("kpiTotalUnidades").textContent =
+          m.totalUnidades.toLocaleString("pt-BR") + " unidades armazenadas";
+        document.getElementById("kpiLivres").textContent = String(m.livres);
+        document.getElementById("kpiIndisponiveis").textContent = String(m.indisponiveis);
+        document.getElementById("kpiTaxa").textContent =
+          m.taxaOcupacao.toFixed(1).replace(".", ",") + "%";
+
+        document.getElementById("topbarSummary").textContent =
+          `${m.ocupadas} ocupadas · ${m.livres} livres · ${m.indisponiveis} indisponíveis`;
+
+        renderDonutChart(m);
+        renderStreetBarChart();
+        renderRecentMovements();
+      }
+
+      function renderDonutChart(m) {
+        const svg = document.getElementById("donutChartSvg");
+        const legend = document.getElementById("donutLegend");
+
+        const cx = 105;
+        const cy = 105;
+        const radius = 78;
+        const strokeWidth = 24;
+        const circumference = 2 * Math.PI * radius;
+
+        const segments = [
+          { label: "Ocupadas", value: m.ocupadas, color: "#dc2626", swatch: "swatch-red" },
+          { label: "Livres", value: m.livres, color: "#16a34a", swatch: "swatch-green" },
+          { label: "Indisponíveis", value: m.indisponiveis, color: "#94a3b8", swatch: "swatch-gray" }
+        ];
+
+        let offset = 0;
+        let circlesSvg = `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#e2e8f0" stroke-width="${strokeWidth}" />`;
+
+        segments.forEach((seg) => {
+          const frac = seg.value / m.total;
+          const dashLen = frac * circumference;
+          if (dashLen > 0) {
+            circlesSvg += `
+              <circle
+                cx="${cx}"
+                cy="${cy}"
+                r="${radius}"
+                fill="none"
+                stroke="${seg.color}"
+                stroke-width="${strokeWidth}"
+                stroke-dasharray="${dashLen.toFixed(2)} ${circumference.toFixed(2)}"
+                stroke-dashoffset="${(-offset).toFixed(2)}"
+                transform="rotate(-90 ${cx} ${cy})"
+              >
+                <title>${seg.label}: ${seg.value} posições (${(frac * 100).toFixed(1)}%)</title>
+              </circle>
+            `;
+            offset += dashLen;
+          }
+        });
+
+        const pctText = m.taxaOcupacao.toFixed(1).replace(".", ",") + "%";
+        svg.innerHTML = `
+          ${circlesSvg}
+          <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="24" font-weight="700" fill="#0f172a" style="font-variant-numeric: tabular-nums;">${pctText}</text>
+          <text x="${cx}" y="${cy + 16}" text-anchor="middle" font-size="11" font-weight="600" fill="#64748b">Ocupação</text>
+        `;
+
+        legend.innerHTML = segments
+          .map((seg) => {
+            const pct = ((seg.value / m.total) * 100).toFixed(1).replace(".", ",");
+            return `
+              <div class="legend-row">
+                <span class="legend-key">
+                  <span class="swatch ${seg.swatch}" aria-hidden="true"></span>
+                  <span>${seg.label}</span>
+                </span>
+                <span class="tabular" style="font-weight: 700;">${seg.value} <span style="color:#64748b; font-weight:500;">(${pct}%)</span></span>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderStreetBarChart() {
+        const svg = document.getElementById("streetChartSvg");
+        const width = 640;
+        const height = 295;
+        const padLeft = 48;
+        const padRight = 20;
+        const padTop = 36;
+        const padBottom = 46;
+        const chartW = width - padLeft - padRight;
+        const chartH = height - padTop - padBottom;
+        const maxPerStreet = 25;
+
+        const streetData = STREETS.map((st) => {
+          const items = state.positions.filter((p) => p.ruaCode === st.code);
+          const ocupadas = items.filter((p) => p.status === "ocupada").length;
+          const livres = items.filter((p) => p.status === "livre").length;
+          const indisponiveis = items.filter((p) => p.status === "indisponivel").length;
+          return { label: st.label, ocupadas, livres, indisponiveis };
+        });
+
+        let out = "";
+
+        // Legenda superior no SVG
+        out += `
+          <g transform="translate(${padLeft}, 10)">
+            <rect x="0" y="0" width="10" height="10" rx="2" fill="#dc2626"></rect>
+            <text x="16" y="9" font-size="11" font-weight="600" fill="#334155">Ocupadas</text>
+            <rect x="92" y="0" width="10" height="10" rx="2" fill="#16a34a"></rect>
+            <text x="108" y="9" font-size="11" font-weight="600" fill="#334155">Livres</text>
+            <rect x="166" y="0" width="10" height="10" rx="2" fill="#94a3b8"></rect>
+            <text x="182" y="9" font-size="11" font-weight="600" fill="#334155">Indisponíveis</text>
+          </g>
+        `;
+
+        // Linhas horizontais de grade (0, 5, 10, 15, 20, 25)
+        for (let tick = 0; tick <= maxPerStreet; tick += 5) {
+          const y = padTop + chartH - (tick / maxPerStreet) * chartH;
+          out += `
+            <line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="#e2e8f0" stroke-width="1" />
+            <text x="${padLeft - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#64748b" style="font-variant-numeric: tabular-nums;">${tick}</text>
+          `;
+        }
+
+        // Barras empilhadas por rua
+        const slotW = chartW / streetData.length;
+        const barW = Math.min(46, slotW * 0.54);
+
+        streetData.forEach((d, idx) => {
+          const x = padLeft + idx * slotW + (slotW - barW) / 2;
+          const hOcc = (d.ocupadas / maxPerStreet) * chartH;
+          const hFree = (d.livres / maxPerStreet) * chartH;
+          const hUnavail = (d.indisponiveis / maxPerStreet) * chartH;
+
+          const yOcc = padTop + chartH - hOcc;
+          const yFree = yOcc - hFree;
+          const yUnavail = yFree - hUnavail;
+
+          if (hOcc > 0) {
+            out += `<rect x="${x}" y="${yOcc}" width="${barW}" height="${hOcc}" fill="#dc2626"><title>${d.label} — Ocupadas: ${d.ocupadas}</title></rect>`;
+          }
+          if (hFree > 0) {
+            out += `<rect x="${x}" y="${yFree}" width="${barW}" height="${hFree}" fill="#16a34a"><title>${d.label} — Livres: ${d.livres}</title></rect>`;
+          }
+          if (hUnavail > 0) {
+            out += `<rect x="${x}" y="${yUnavail}" width="${barW}" height="${hUnavail}" fill="#94a3b8"><title>${d.label} — Indisponíveis: ${d.indisponiveis}</title></rect>`;
+          }
+
+          // Rótulo da rua + resumo numérico abaixo
+          const centerX = x + barW / 2;
+          out += `
+            <text x="${centerX}" y="${padTop + chartH + 18}" text-anchor="middle" font-size="12" font-weight="700" fill="#0f172a">${d.label}</text>
+            <text x="${centerX}" y="${padTop + chartH + 34}" text-anchor="middle" font-size="11" fill="#64748b" style="font-variant-numeric: tabular-nums;">${d.ocupadas}/25 ocup.</text>
+          `;
+        });
+
+        svg.innerHTML = out;
+      }
+
+      function renderRecentMovements() {
+        const container = document.getElementById("recentMovementsContainer");
+        const countLabel = document.getElementById("movCountLabel");
+        countLabel.textContent = `${state.movements.length} registros`;
+
+        if (state.movements.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <p class="empty-state-title">Nenhuma movimentação registrada</p>
+              <p class="empty-state-desc">As entradas (putaway) e saídas (picking) aparecerão aqui automaticamente.</p>
+            </div>
+          `;
+          return;
+        }
+
+        const recent = state.movements.slice(0, 10);
+        container.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Data / Hora</th>
+                <th>Operação</th>
+                <th>SKU</th>
+                <th>Produto</th>
+                <th class="text-right">Qtd.</th>
+                <th>Endereço</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${recent
+                .map((mov) => {
+                  const isEntrada = mov.tipo === "ENTRADA";
+                  return `
+                    <tr>
+                      <td class="tabular" style="white-space: nowrap; color: #475569;">${escapeHtml(formatDateBR(mov.timestamp))}</td>
+                      <td>
+                        <span class="status-text ${isEntrada ? "entrada" : "saida"}">
+                          ${isEntrada ? "▲ Entrada" : "▼ Saída"}
+                        </span>
+                      </td>
+                      <td class="mono">${escapeHtml(mov.sku)}</td>
+                      <td>${escapeHtml(mov.nome)}</td>
+                      <td class="text-right tabular" style="font-weight: 600;">${mov.quantidade}</td>
+                      <td class="mono">${escapeHtml(mov.address)}</td>
+                    </tr>
+                  `;
+                })
+                .join("")}
+            </tbody>
+          </table>
+        `;
+      }
+
+      /* =========================================================
+         5. MAPA VISUAL INTERATIVO (6 RUAS × 5 MÓDULOS × 5 NÍVEIS)
+         ========================================================= */
+      function renderMap() {
+        const grid = document.getElementById("warehouseMapGrid");
+
+        const html = STREETS.map((street) => {
+          const streetPositions = state.positions.filter((p) => p.ruaCode === street.code);
+          const occCount = streetPositions.filter((p) => p.status === "ocupada").length;
+          const freeCount = streetPositions.filter((p) => p.status === "livre").length;
+          const unavailCount = streetPositions.filter((p) => p.status === "indisponivel").length;
+
+          let matrixHtml = `<div class="rack-col-head"></div>`;
+          MODULES.forEach((mod) => {
+            matrixHtml += `<div class="rack-col-head">${mod.replace("MOD-", "M")}</div>`;
+          });
+
+          LEVELS_DISPLAY_ORDER.forEach((level) => {
+            matrixHtml += `<div class="rack-row-label">${level.replace("NIVEL-", "N")}</div>`;
+            MODULES.forEach((mod) => {
+              const address = `${street.code} / ${mod} / ${level}`;
+              const pos = getPositionByAddress(address);
+              const isSelected = selectedMapAddress === address;
+              const isDimmed = mapStatusFilter !== "todos" && pos.status !== mapStatusFilter;
+
+              let codeText = "L";
+              let statusLabel = "Livre";
+              if (pos.status === "ocupada") {
+                codeText = "O";
+                statusLabel = `Ocupada: ${pos.produto.sku} (${pos.produto.quantidade} un.)`;
+              } else if (pos.status === "indisponivel") {
+                codeText = "X";
+                statusLabel = `Indisponível: ${pos.motivoIndisponibilidade}`;
+              }
+
+              matrixHtml += `
+                <button
+                  type="button"
+                  class="slot-btn ${pos.status} ${isSelected ? "selected" : ""} ${isDimmed ? "dimmed" : ""}"
+                  data-address="${escapeHtml(address)}"
+                  title="${escapeHtml(address)} — ${escapeHtml(statusLabel)}"
+                  aria-label="${escapeHtml(address)}, ${escapeHtml(statusLabel)}"
+                >
+                  ${codeText}
+                </button>
+              `;
+            });
+          });
+
+          return `
+            <div class="street-block">
+              <div class="street-head">
+                <h3 class="street-name">${escapeHtml(street.label)}</h3>
+                <span class="street-stats">${occCount} ocup. · ${freeCount} livres · ${unavailCount} indisp.</span>
+              </div>
+              <div class="rack-matrix">
+                ${matrixHtml}
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        grid.innerHTML = html;
+        renderMapInspector();
+      }
+
+      function renderMapInspector() {
+        const container = document.getElementById("inspectorContent");
+        if (!selectedMapAddress) {
+          container.innerHTML = `<p class="section-desc">Selecione uma posição no mapa para exibir os detalhes completos.</p>`;
+          return;
+        }
+
+        const pos = getPositionByAddress(selectedMapAddress);
+        if (!pos) return;
+
+        let bannerText = "";
+        let productDetails = "";
+        let actionButtons = "";
+
+        if (pos.status === "livre") {
+          bannerText = `<div class="status-banner livre">Posição livre e disponível para armazenagem.</div>`;
+          actionButtons = `
+            <button type="button" class="btn btn-accent" style="width: 100%;" data-action="putaway-here" data-address="${escapeHtml(pos.address)}">
+              Endereçar Mercadoria Aqui
+            </button>
+          `;
+        } else if (pos.status === "ocupada") {
+          bannerText = `<div class="status-banner ocupada">Posição ocupada com produto em estoque.</div>`;
+          productDetails = `
+            <div class="detail-row">
+              <span class="detail-key">Código SKU</span>
+              <span class="detail-val mono">${escapeHtml(pos.produto.sku)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Produto</span>
+              <span class="detail-val">${escapeHtml(pos.produto.nome)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Quantidade</span>
+              <span class="detail-val tabular">${pos.produto.quantidade} un.</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Atualizado em</span>
+              <span class="detail-val tabular">${escapeHtml(formatDateBR(pos.produto.updatedAt))}</span>
+            </div>
+          `;
+          actionButtons = `
+            <button type="button" class="btn btn-danger" style="width: 100%;" data-action="pick-here" data-address="${escapeHtml(pos.address)}">
+              Registrar Saída desta Posição
+            </button>
+          `;
+        } else {
+          bannerText = `<div class="status-banner indisponivel">Posição indisponível para operação.</div>`;
+          productDetails = `
+            <div class="detail-row">
+              <span class="detail-key">Motivo</span>
+              <span class="detail-val">${escapeHtml(pos.motivoIndisponibilidade || "Bloqueio operacional")}</span>
+            </div>
+          `;
+        }
+
+        container.innerHTML = `
+          <div class="inspector-address">${escapeHtml(pos.address)}</div>
+          ${bannerText}
+          <div class="detail-list">
+            <div class="detail-row">
+              <span class="detail-key">Rua</span>
+              <span class="detail-val">${escapeHtml(pos.ruaLabel)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Módulo</span>
+              <span class="detail-val mono">${escapeHtml(pos.modulo)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Nível</span>
+              <span class="detail-val mono">${escapeHtml(pos.nivel)}</span>
+            </div>
+            ${productDetails}
+          </div>
+          ${actionButtons}
+        `;
+      }
+
+      /* =========================================================
+         6. ENTRADA DE MERCADORIAS (PUTAWAY)
+         ========================================================= */
+      function showPutawayAlert(type, message) {
+        const el = document.getElementById("putawayAlert");
+        el.className = `alert visible ${type}`;
+        el.textContent = message;
+      }
+
+      function clearPutawayAlert() {
+        const el = document.getElementById("putawayAlert");
+        el.className = "alert";
+        el.textContent = "";
+      }
+
+      function renderPutawayOptions(preselectAddress) {
+        const ruaFilter = document.getElementById("selectPutawayRua").value;
+        const selectAddr = document.getElementById("selectPutawayAddress");
+        const freeAll = state.positions.filter((p) => p.status === "livre");
+        const filteredFree =
+          ruaFilter === "TODAS"
+            ? freeAll
+            : freeAll.filter((p) => p.ruaCode === ruaFilter);
+
+        document.getElementById("freeSlotsCounter").textContent =
+          `${freeAll.length} posições livres`;
+
+        const previousVal = preselectAddress || selectAddr.value;
+
+        if (filteredFree.length === 0) {
+          selectAddr.innerHTML = `<option value="">Nenhuma posição livre disponível neste filtro</option>`;
+        } else {
+          selectAddr.innerHTML =
+            `<option value="">Selecione um endereço livre...</option>` +
+            filteredFree
+              .map(
+                (p) =>
+                  `<option value="${escapeHtml(p.address)}">${escapeHtml(p.address)}</option>`
+              )
+              .join("");
+
+          if (previousVal && filteredFree.some((p) => p.address === previousVal)) {
+            selectAddr.value = previousVal;
+          }
+        }
+
+        renderPutawayPreview();
+      }
+
+      function renderPutawayPreview() {
+        const container = document.getElementById("putawayPreviewContent");
+        const selectedAddr = document.getElementById("selectPutawayAddress").value;
+        const skuVal = document.getElementById("inputSku").value.trim();
+        const nomeVal = document.getElementById("inputNome").value.trim();
+        const qtyVal = document.getElementById("inputQty").value.trim();
+
+        if (!selectedAddr) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <p class="empty-state-title">Nenhum endereço selecionado</p>
+              <p class="empty-state-desc">Escolha uma posição livre na lista ao lado para conferir os dados de endereçamento antes de confirmar.</p>
+            </div>
+          `;
+          return;
+        }
+
+        const pos = getPositionByAddress(selectedAddr);
+        if (!pos) {
+          container.innerHTML = `<div class="status-banner indisponivel">Endereço inválido.</div>`;
+          return;
+        }
+
+        const statusBadge =
+          pos.status === "livre"
+            ? `<div class="status-banner livre">Posição livre e apta para recebimento.</div>`
+            : `<div class="status-banner ocupada">Atenção: posição ${escapeHtml(pos.status)} — cadastro bloqueado.</div>`;
+
+        container.innerHTML = `
+          <div class="inspector-address">${escapeHtml(pos.address)}</div>
+          ${statusBadge}
+          <div class="detail-list">
+            <div class="detail-row">
+              <span class="detail-key">Rua</span>
+              <span class="detail-val">${escapeHtml(pos.ruaLabel)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Módulo</span>
+              <span class="detail-val mono">${escapeHtml(pos.modulo)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Nível</span>
+              <span class="detail-val mono">${escapeHtml(pos.nivel)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">SKU a alocar</span>
+              <span class="detail-val mono">${escapeHtml(skuVal || "—")}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Produto</span>
+              <span class="detail-val">${escapeHtml(nomeVal || "—")}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Quantidade</span>
+              <span class="detail-val tabular">${qtyVal ? escapeHtml(qtyVal) + " un." : "—"}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      function handlePutawaySubmit(event) {
+        event.preventDefault();
+        clearPutawayAlert();
+
+        const sku = document.getElementById("inputSku").value.trim().toUpperCase();
+        const nome = document.getElementById("inputNome").value.trim();
+        const rawQty = document.getElementById("inputQty").value.trim();
+        const address = document.getElementById("selectPutawayAddress").value.trim();
+
+        if (!sku) {
+          showPutawayAlert("error", "Informe o código SKU do produto.");
+          document.getElementById("inputSku").focus();
+          return;
+        }
+
+        if (!nome) {
+          showPutawayAlert("error", "Informe o nome do produto.");
+          document.getElementById("inputNome").focus();
+          return;
+        }
+
+        // Validação estrita de número inteiro positivo
+        if (!/^\d+$/.test(rawQty)) {
+          showPutawayAlert("error", "A quantidade recebida deve ser um número inteiro positivo (sem casas decimais).");
+          document.getElementById("inputQty").focus();
+          return;
+        }
+
+        const quantidade = Number(rawQty);
+        if (!Number.isInteger(quantidade) || quantidade <= 0) {
+          showPutawayAlert("error", "A quantidade recebida deve ser maior que zero.");
+          document.getElementById("inputQty").focus();
+          return;
+        }
+
+        if (!address) {
+          showPutawayAlert("error", "Selecione um endereço livre de armazenamento.");
+          document.getElementById("selectPutawayAddress").focus();
+          return;
+        }
+
+        const pos = getPositionByAddress(address);
+        if (!pos) {
+          showPutawayAlert("error", `Endereço inválido: "${address}".`);
+          return;
+        }
+
+        // Impede cadastro em posições ocupadas ou indisponíveis mesmo se o DOM for manipulado
+        if (pos.status === "ocupada") {
+          showPutawayAlert("error", `Operação bloqueada: a posição ${pos.address} já está ocupada pelo SKU ${pos.produto.sku}.`);
+          return;
+        }
+
+        if (pos.status === "indisponivel") {
+          showPutawayAlert("error", `Operação bloqueada: a posição ${pos.address} está indisponível (${pos.motivoIndisponibilidade}).`);
+          return;
+        }
+
+        // Efetua putaway
+        pos.status = "ocupada";
+        pos.produto = {
+          sku,
+          nome,
+          quantidade,
+          updatedAt: new Date().toISOString()
+        };
+
+        logMovement("ENTRADA", sku, nome, quantidade, pos.address);
+        saveState();
+
+        // Limpa formulário e atualiza todas as views dependentes
+        document.getElementById("putawayForm").reset();
+        document.getElementById("selectPutawayRua").value = "TODAS";
+        selectedMapAddress = pos.address;
+
+        renderPutawayOptions();
+        renderDashboard();
+        renderMap();
+
+        showPutawayAlert(
+          "success",
+          `Entrada confirmada: ${quantidade} un. de "${nome}" (${sku}) armazenadas em ${pos.address}.`
+        );
+      }
+
+      /* =========================================================
+         7. SAÍDA DE MERCADORIAS (PICKING)
+         ========================================================= */
+      function showPickingAlert(type, message) {
+        const el = document.getElementById("pickingAlert");
+        el.className = `alert visible ${type}`;
+        el.textContent = message;
+      }
+
+      function clearPickingAlert() {
+        const el = document.getElementById("pickingAlert");
+        el.className = "alert";
+        el.textContent = "";
+      }
+
+      function renderPickingView() {
+        const query = document.getElementById("pickingSearchInput").value.trim().toLowerCase();
+        const occupied = state.positions.filter((p) => p.status === "ocupada" && p.produto);
+
+        const matches = occupied.filter((p) => {
+          if (!query) return true;
+          return (
+            p.produto.sku.toLowerCase().includes(query) ||
+            p.produto.nome.toLowerCase().includes(query) ||
+            p.address.toLowerCase().includes(query)
+          );
+        });
+
+        document.getElementById("pickingListCount").textContent =
+          `${occupied.length} posições ocupadas`;
+
+        const container = document.getElementById("pickingResultsContainer");
+
+        if (occupied.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <p class="empty-state-title">Armazém sem estoque</p>
+              <p class="empty-state-desc">Não há produtos armazenados no momento. Registre uma entrada de mercadorias primeiro.</p>
+            </div>
+          `;
+        } else if (matches.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <p class="empty-state-title">Nenhum produto encontrado</p>
+              <p class="empty-state-desc">Não encontramos estoque correspondente a "${escapeHtml(document.getElementById("pickingSearchInput").value.trim())}".</p>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <table>
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Produto</th>
+                  <th>Localização</th>
+                  <th class="text-right">Saldo</th>
+                  <th class="text-right">Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${matches
+                  .map((p) => {
+                    const isSelected = selectedPickingAddress === p.address;
+                    return `
+                      <tr class="${isSelected ? "selected-pick-row" : ""}">
+                        <td class="mono">${escapeHtml(p.produto.sku)}</td>
+                        <td>${escapeHtml(p.produto.nome)}</td>
+                        <td>
+                          <div>${escapeHtml(p.ruaLabel)} · <span class="mono">${escapeHtml(p.modulo)}</span> · <span class="mono">${escapeHtml(p.nivel)}</span></div>
+                        </td>
+                        <td class="text-right tabular" style="font-weight: 700;">${p.produto.quantidade}</td>
+                        <td class="text-right">
+                          <button
+                            type="button"
+                            class="btn btn-sm ${isSelected ? "btn-primary" : "btn-secondary"}"
+                            data-pick-select="${escapeHtml(p.address)}"
+                          >
+                            ${isSelected ? "Selecionado" : "Selecionar"}
+                          </button>
+                        </td>
+                      </tr>
+                    `;
+                  })
+                  .join("")}
+              </tbody>
+            </table>
+          `;
+        }
+
+        renderPickingPanel();
+      }
+
+      function renderPickingPanel() {
+        const panel = document.getElementById("pickingFormContainer");
+        const pos = selectedPickingAddress ? getPositionByAddress(selectedPickingAddress) : null;
+
+        if (!pos || pos.status !== "ocupada" || !pos.produto) {
+          selectedPickingAddress = null;
+          panel.innerHTML = `
+            <div class="empty-state">
+              <p class="empty-state-title">Selecione um item na lista</p>
+              <p class="empty-state-desc">Pesquise por SKU ou nome na tabela ao lado e clique em "Selecionar" para informar a quantidade a retirar.</p>
+            </div>
+          `;
+          return;
+        }
+
+        panel.innerHTML = `
+          <div class="inspector-address">${escapeHtml(pos.address)}</div>
+          <div class="detail-list">
+            <div class="detail-row">
+              <span class="detail-key">Código SKU</span>
+              <span class="detail-val mono">${escapeHtml(pos.produto.sku)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Produto</span>
+              <span class="detail-val">${escapeHtml(pos.produto.nome)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Rua / Módulo / Nível</span>
+              <span class="detail-val">${escapeHtml(pos.ruaLabel)} · ${escapeHtml(pos.modulo)} · ${escapeHtml(pos.nivel)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Estoque Disponível</span>
+              <span class="detail-val tabular" style="color: var(--green-700); font-size: 15px;">${pos.produto.quantidade} un.</span>
+            </div>
+          </div>
+
+          <form id="pickingConfirmForm" class="form-grid" novalidate>
+            <div class="form-field full">
+              <label for="inputPickQty">Quantidade a Retirar *</label>
+              <input
+                type="number"
+                id="inputPickQty"
+                class="input tabular"
+                min="1"
+                max="${pos.produto.quantidade}"
+                step="1"
+                placeholder="Máximo: ${pos.produto.quantidade}"
+                required
+              />
+              <span class="field-hint">Ao retirar todo o saldo (${pos.produto.quantidade} un.), a posição será liberada automaticamente.</span>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-danger">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Confirmar Saída</span>
+              </button>
+              <button type="button" id="btnPickAll" class="btn btn-secondary">Retirar Tudo (${pos.produto.quantidade})</button>
+            </div>
+          </form>
+        `;
+
+        document.getElementById("btnPickAll").addEventListener("click", () => {
+          document.getElementById("inputPickQty").value = String(pos.produto.quantidade);
+          document.getElementById("inputPickQty").focus();
+        });
+
+        document.getElementById("pickingConfirmForm").addEventListener("submit", handlePickingSubmit);
+      }
+
+      function handlePickingSubmit(event) {
+        event.preventDefault();
+        clearPickingAlert();
+
+        const pos = selectedPickingAddress ? getPositionByAddress(selectedPickingAddress) : null;
+        if (!pos || pos.status !== "ocupada" || !pos.produto) {
+          showPickingAlert("error", "Posição inválida ou já vazia. Selecione outro item.");
+          renderPickingView();
+          return;
+        }
+
+        const rawQty = document.getElementById("inputPickQty").value.trim();
+        if (!/^\d+$/.test(rawQty)) {
+          showPickingAlert("error", "Informe uma quantidade inteira positiva para retirada.");
+          document.getElementById("inputPickQty").focus();
+          return;
+        }
+
+        const qty = Number(rawQty);
+        if (!Number.isInteger(qty) || qty <= 0) {
+          showPickingAlert("error", "A quantidade a retirar deve ser maior que zero.");
+          document.getElementById("inputPickQty").focus();
+          return;
+        }
+
+        if (qty > pos.produto.quantidade) {
+          showPickingAlert(
+            "error",
+            `Retirada recusada: a quantidade solicitada (${qty} un.) é maior que o estoque disponível na posição (${pos.produto.quantidade} un.).`
+          );
+          document.getElementById("inputPickQty").focus();
+          return;
+        }
+
+        const sku = pos.produto.sku;
+        const nome = pos.produto.nome;
+        const restante = pos.produto.quantidade - qty;
+
+        if (restante === 0) {
+          pos.status = "livre";
+          pos.produto = null;
+          selectedPickingAddress = null;
+        } else {
+          pos.produto.quantidade = restante;
+          pos.produto.updatedAt = new Date().toISOString();
+        }
+
+        logMovement("SAIDA", sku, nome, qty, pos.address);
+        saveState();
+
+        renderPickingView();
+        renderDashboard();
+        renderMap();
+        renderPutawayOptions();
+
+        if (restante === 0) {
+          showPickingAlert(
+            "success",
+            `Saída concluída: ${qty} un. de "${nome}" (${sku}) retiradas. A posição ${pos.address} foi liberada.`
+          );
+        } else {
+          showPickingAlert(
+            "success",
+            `Saída concluída: ${qty} un. de "${nome}" (${sku}) retiradas de ${pos.address}. Saldo restante: ${restante} un.`
+          );
+        }
+      }
+
+      /* =========================================================
+         8. CONSULTA DE PRODUTOS (BUSCA INSTANTÂNEA)
+         ========================================================= */
+      function renderLookupView() {
+        const rawQuery = document.getElementById("lookupSearchInput").value.trim();
+        const query = rawQuery.toLowerCase();
+        const ruaFilter = document.getElementById("lookupRuaFilter").value;
+
+        const occupied = state.positions.filter((p) => p.status === "ocupada" && p.produto);
+        const filtered = occupied.filter((p) => {
+          const matchesRua = ruaFilter === "TODAS" || p.ruaCode === ruaFilter;
+          const matchesText =
+            !query ||
+            p.produto.nome.toLowerCase().includes(query) ||
+            p.produto.sku.toLowerCase().includes(query);
+          return matchesRua && matchesText;
+        });
+
+        const totalUnits = filtered.reduce((acc, p) => acc + p.produto.quantidade, 0);
+        document.getElementById("lookupCounter").textContent =
+          `${filtered.length} ${filtered.length === 1 ? "registro encontrado" : "registros encontrados"} · ${totalUnits.toLocaleString("pt-BR")} un.`;
+
+        const container = document.getElementById("lookupResultsContainer");
+
+        if (occupied.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <p class="empty-state-title">Nenhum produto armazenado</p>
+              <p class="empty-state-desc">O armazém está vazio no momento. Utilize "Entrada de Mercadorias" para cadastrar produtos.</p>
+            </div>
+          `;
+          return;
+        }
+
+        if (filtered.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <p class="empty-state-title">Nenhum produto encontrado</p>
+              <p class="empty-state-desc">Não há itens armazenados para a busca "${escapeHtml(rawQuery)}"${ruaFilter !== "TODAS" ? ` na ${escapeHtml(ruaFilter)}` : ""}. Tente outro nome ou código SKU.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Nome do Produto</th>
+                <th>SKU</th>
+                <th class="text-right">Quantidade</th>
+                <th>Rua</th>
+                <th>Módulo</th>
+                <th>Nível</th>
+                <th class="text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered
+                .map(
+                  (p) => `
+                  <tr>
+                    <td style="font-weight: 600;">${escapeHtml(p.produto.nome)}</td>
+                    <td class="mono">${escapeHtml(p.produto.sku)}</td>
+                    <td class="text-right tabular" style="font-weight: 700;">${p.produto.quantidade}</td>
+                    <td>${escapeHtml(p.ruaLabel)}</td>
+                    <td class="mono">${escapeHtml(p.modulo)}</td>
+                    <td class="mono">${escapeHtml(p.nivel)}</td>
+                    <td class="text-right" style="white-space: nowrap;">
+                      <button type="button" class="btn btn-sm btn-secondary" data-lookup-map="${escapeHtml(p.address)}">Ver no Mapa</button>
+                      <button type="button" class="btn btn-sm btn-danger" data-lookup-pick="${escapeHtml(p.address)}">Saída</button>
+                    </td>
+                  </tr>
+                `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        `;
+      }
+
+      /* =========================================================
+         9. MODAL DE RESTAURAÇÃO DE DEMONSTRAÇÃO E EVENTOS
+         ========================================================= */
+      function openResetModal() {
+        document.getElementById("resetModalBackdrop").classList.add("open");
+        document.getElementById("btnConfirmReset").focus();
+      }
+
+      function closeResetModal() {
+        document.getElementById("resetModalBackdrop").classList.remove("open");
+      }
+
+      function restoreDemoData() {
+        state = buildInitialState();
+        saveState();
+        selectedMapAddress = "RUA-A / MOD-01 / NIVEL-1";
+        selectedPickingAddress = null;
+        clearPutawayAlert();
+        clearPickingAlert();
+        document.getElementById("lookupSearchInput").value = "";
+        document.getElementById("pickingSearchInput").value = "";
+
+        renderDashboard();
+        renderMap();
+        renderPutawayOptions();
+        renderPickingView();
+        renderLookupView();
+        closeResetModal();
+      }
+
+      function bindEvents() {
+        // Navegação lateral
+        document.querySelectorAll(".nav-btn[data-view]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            switchView(btn.getAttribute("data-view"));
+          });
+        });
+
+        // Menu mobile
+        document.getElementById("btnMobileMenu").addEventListener("click", openMobileSidebar);
+        document.getElementById("sidebarOverlay").addEventListener("click", closeMobileSidebar);
+
+        // Botão rápido no topo
+        document.getElementById("btnQuickPutaway").addEventListener("click", () => {
+          switchView("entrada");
+          document.getElementById("inputSku").focus();
+        });
+
+        // Modal de restauração
+        document.getElementById("btnOpenResetModal").addEventListener("click", openResetModal);
+        document.getElementById("btnCancelReset").addEventListener("click", closeResetModal);
+        document.getElementById("btnConfirmReset").addEventListener("click", restoreDemoData);
+        document.getElementById("resetModalBackdrop").addEventListener("click", (e) => {
+          if (e.target === e.currentTarget) closeResetModal();
+        });
+
+        // Filtros e cliques no Mapa
+        document.querySelectorAll("[data-map-filter]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            mapStatusFilter = btn.getAttribute("data-map-filter");
+            document.querySelectorAll("[data-map-filter]").forEach((b) => {
+              b.classList.toggle("active", b === btn);
+            });
+            renderMap();
+          });
+        });
+
+        document.getElementById("warehouseMapGrid").addEventListener("click", (e) => {
+          const btn = e.target.closest(".slot-btn[data-address]");
+          if (!btn) return;
+          selectedMapAddress = btn.getAttribute("data-address");
+          renderMap();
+        });
+
+        document.getElementById("mapInspector").addEventListener("click", (e) => {
+          const putawayBtn = e.target.closest("[data-action='putaway-here']");
+          if (putawayBtn) {
+            const addr = putawayBtn.getAttribute("data-address");
+            switchView("entrada");
+            document.getElementById("selectPutawayRua").value = "TODAS";
+            renderPutawayOptions(addr);
+            document.getElementById("inputSku").focus();
+            return;
+          }
+          const pickBtn = e.target.closest("[data-action='pick-here']");
+          if (pickBtn) {
+            const addr = pickBtn.getAttribute("data-address");
+            selectedPickingAddress = addr;
+            switchView("saida");
+            document.getElementById("pickingSearchInput").value = "";
+            renderPickingView();
+          }
+        });
+
+        // Entrada (Putaway)
+        document.getElementById("putawayForm").addEventListener("submit", handlePutawaySubmit);
+        document.getElementById("selectPutawayRua").addEventListener("change", () => {
+          renderPutawayOptions();
+        });
+        document.getElementById("selectPutawayAddress").addEventListener("change", renderPutawayPreview);
+        document.getElementById("inputSku").addEventListener("input", renderPutawayPreview);
+        document.getElementById("inputNome").addEventListener("input", renderPutawayPreview);
+        document.getElementById("inputQty").addEventListener("input", renderPutawayPreview);
+        document.getElementById("btnResetPutawayForm").addEventListener("click", () => {
+          document.getElementById("putawayForm").reset();
+          document.getElementById("selectPutawayRua").value = "TODAS";
+          clearPutawayAlert();
+          renderPutawayOptions();
+        });
+
+        // Saída (Picking)
+        document.getElementById("pickingSearchInput").addEventListener("input", renderPickingView);
+        document.getElementById("pickingResultsContainer").addEventListener("click", (e) => {
+          const btn = e.target.closest("[data-pick-select]");
+          if (!btn) return;
+          clearPickingAlert();
+          selectedPickingAddress = btn.getAttribute("data-pick-select");
+          renderPickingView();
+          const qtyInput = document.getElementById("inputPickQty");
+          if (qtyInput) qtyInput.focus();
+        });
+
+        // Consulta de Produtos (busca instantânea)
+        document.getElementById("lookupSearchInput").addEventListener("input", renderLookupView);
+        document.getElementById("lookupRuaFilter").addEventListener("change", renderLookupView);
+        document.getElementById("lookupResultsContainer").addEventListener("click", (e) => {
+          const mapBtn = e.target.closest("[data-lookup-map]");
+          if (mapBtn) {
+            selectedMapAddress = mapBtn.getAttribute("data-lookup-map");
+            mapStatusFilter = "todos";
+            document.querySelectorAll("[data-map-filter]").forEach((b) => {
+              b.classList.toggle("active", b.getAttribute("data-map-filter") === "todos");
+            });
+            switchView("mapa");
+            return;
+          }
+          const pickBtn = e.target.closest("[data-lookup-pick]");
+          if (pickBtn) {
+            selectedPickingAddress = pickBtn.getAttribute("data-lookup-pick");
+            switchView("saida");
+            document.getElementById("pickingSearchInput").value = "";
+            renderPickingView();
+          }
+        });
+
+        // Fechar modal ou menu com Esc
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") {
+            closeResetModal();
+            closeMobileSidebar();
+          }
+        });
+      }
+
+      /* =========================================================
+         10. INICIALIZAÇÃO
+         ========================================================= */
+      loadState();
+      bindEvents();
+      renderDashboard();
+      renderMap();
+      renderPutawayOptions();
+      renderPickingView();
+      renderLookupView();
+    })();
+  </script>
+</body>
+</html>
